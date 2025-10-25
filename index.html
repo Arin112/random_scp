@@ -64,7 +64,7 @@
         <h1 class="text-3xl font-semibold sm:text-4xl">Random SCP Portal</h1>
         <p class="mx-auto max-w-xl text-base text-indigo-100/80 sm:text-lg">
           Выберите диапазон номеров и исследуйте случайные объекты Фонда SCP в
-          русской или английской версии. Готовы к непредсказуемости?
+          русской или английской версии.
         </p>
       </header>
       <section
@@ -172,13 +172,32 @@
         return value.toString();
       };
 
-      const setFeedback = (message, isError = false) => {
-        feedback.textContent = message;
+      const setFeedback = (
+        message,
+        { isError = false, url = null, anchorText = "" } = {}
+      ) => {
         feedback.dataset.state = isError ? "error" : "idle";
         feedback.classList.toggle("text-rose-300", isError);
-        if (!isError) {
-          feedback.classList.remove("text-rose-300");
+
+        if (isError || !url) {
+          feedback.textContent = message;
+          if (!isError) {
+            feedback.classList.remove("text-rose-300");
+          }
+          return;
         }
+
+        feedback.classList.remove("text-rose-300");
+        const link = document.createElement("a");
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.className =
+          "underline decoration-dashed decoration-2 underline-offset-4 text-indigo-100 hover:text-white transition";
+        link.textContent = anchorText || url;
+
+        feedback.textContent = message ? `${message} ` : "";
+        feedback.appendChild(link);
       };
 
       const getRandomInRange = (min, max) => {
@@ -190,12 +209,14 @@
         const end = clampRange(parseInt(endInput.value, 10));
 
         if (start === null || end === null) {
-          setFeedback("Введите корректные числа в оба поля.", true);
+          setFeedback("Введите корректные числа в оба поля.", { isError: true });
           return;
         }
 
         if (start > end) {
-          setFeedback("Начало диапазона не может быть больше конца.", true);
+          setFeedback("Начало диапазона не может быть больше конца.", {
+            isError: true,
+          });
           return;
         }
 
@@ -203,7 +224,10 @@
         const formattedId = formatId(randomId);
         const targetUrl = `${ROUTES[locale]}${formattedId}`;
 
-        setFeedback(`Открываем SCP-${formattedId} (${locale.toUpperCase()}).`);
+        setFeedback("Последняя открытая страница", {
+          url: targetUrl,
+          anchorText: `SCP-${formattedId} [${locale.toUpperCase()}]`,
+        });
         window.open(targetUrl, "_blank", "noopener");
       };
 
